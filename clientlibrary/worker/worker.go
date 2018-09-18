@@ -115,6 +115,8 @@ func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisCli
 		log.Info("Creating Kinesis session")
 		s := session.New(&aws.Config{Region: aws.String(w.regionName)})
 		w.kc = kinesis.New(s)
+	} else {
+		w.kc = kinesisClient
 	}
 
 
@@ -122,6 +124,8 @@ func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisCli
 		log.Info("Creating DynamoDB session")
 		s := session.New(&aws.Config{Region: aws.String(w.regionName)})
 		w.dynamo = dynamodb.New(s)
+	} else {
+		w.dynamo = dynamodbClient
 	}
 	w.checkpointer = NewDynamoCheckpoint(w.dynamo, kclConfig)
 
