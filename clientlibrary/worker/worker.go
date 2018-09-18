@@ -122,8 +122,8 @@ func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisCli
 		log.Info("Creating DynamoDB session")
 		s := session.New(&aws.Config{Region: aws.String(w.regionName)})
 		w.dynamo = dynamodb.New(s)
-		w.checkpointer = NewDynamoCheckpoint(w.dynamo, kclConfig)
 	}
+	w.checkpointer = NewDynamoCheckpoint(w.dynamo, kclConfig)
 
 	if w.metricsConfig == nil {
 		w.metricsConfig = &metrics.MonitoringConfiguration{MonitoringService: ""}
