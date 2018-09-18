@@ -100,7 +100,7 @@ type Worker struct {
 }
 
 // NewWorker constructs a Worker instance for processing Kinesis stream data.
-func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisClientLibConfiguration, metricsConfig *metrics.MonitoringConfiguration) *Worker {
+func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisClientLibConfiguration, metricsConfig *metrics.MonitoringConfiguration, kinesisClient *kinesisiface.KinesisAPI, dynamodbClient *dynamodbiface.DynamoDBAPI) *Worker {
 	w := &Worker{
 		streamName:       kclConfig.StreamName,
 		regionName:       kclConfig.RegionName,
@@ -111,14 +111,19 @@ func NewWorker(factory kcl.IRecordProcessorFactory, kclConfig *config.KinesisCli
 	}
 
 	// create session for Kinesis
-	log.Info("Creating Kinesis session")
-	s := session.New(&aws.Config{Region: aws.String(w.regionName)})
-	w.kc = kinesis.New(s)
+	if kinesisClient == nil {
+		log.Info("Creating Kinesis session")
+		s := session.New(&aws.Config{Region: aws.String(w.regionName)})
+		w.kc = kinesis.New(s)
+	}
 
-	log.Info("Creating DynamoDB session")
-	s = session.New(&aws.Config{Region: aws.String(w.regionName)})
-	w.dynamo = dynamodb.New(s)
-	w.checkpointer = NewDynamoCheckpoint(w.dynamo, kclConfig)
+
+	if dynamodbClient == nil {
+		log.Info("Creating DynamoDB session")
+		s := session.New(&aws.Config{Region: aws.String(w.regionName)})
+		w.dynamo = dynamodb.New(s)
+		w.checkpointer = NewDynamoCheckpoint(w.dynamo, kclConfig)
+	}
 
 	if w.metricsConfig == nil {
 		w.metricsConfig = &metrics.MonitoringConfiguration{MonitoringService: ""}
